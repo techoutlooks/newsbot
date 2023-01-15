@@ -1,5 +1,3 @@
-from daily_query.helpers import mk_date
-from news_utils.base import ConfigMixin
 from scrapy.commands import ScrapyCommand
 from scrapy.crawler import CrawlerRunner
 from scrapy.exceptions import UsageError
@@ -7,10 +5,12 @@ from scrapy.utils.conf import arglist_to_dict
 from scrapy.utils.project import get_project_settings
 from twisted.internet import defer, reactor
 
-from news_utils.base.logging import NamespaceFormatter, log_running
+from newsutils.base import PostConfigMixin
+from newsutils.logging import NamespaceFormatter, log_running
+from daily_query.helpers import mk_date
 
 
-class CrawlAllCmd(ConfigMixin, ScrapyCommand):
+class CrawlAllCmd(PostConfigMixin, ScrapyCommand):
     """
     https://gist.github.com/gustavorps/0df8bf6b096ecbdca694dbed96d0a334
     """
@@ -64,7 +64,7 @@ class CrawlAllCmd(ConfigMixin, ScrapyCommand):
             yield log_running(f"crawling {spider}", msg)(crawl_task)\
                 (self, spider, *args, **kwargs)
 
-        self.log_task_ended()
+        self.log_task_ended(msg)
         reactor.stop()
 
 

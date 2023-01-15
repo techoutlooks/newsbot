@@ -1,21 +1,21 @@
 from daily_query.helpers import mk_date
-from news_utils.base import ConfigMixin
-from news_utils.base.nlp import DayNlp
-from news_utils.default_settings import META_POST
+from newsutils.base.posts import PostConfigMixin
+from newsutils.nlp import DayNlp
+from newsutils import META_POST
 
 from scrapy.commands import ScrapyCommand
 from scrapy.exceptions import UsageError
 from scrapy.utils.conf import arglist_to_dict
 
 from daily_query.mongo import MongoDaily, Collection
-from news_utils.base.logging import log_running, NamespaceFormatter
+from newsutils.logging import log_running, NamespaceFormatter
 
 # type of summary to generate/save, whether one per post, or
 # a meta summary (summary of summaries) across all sibling posts.
 CMD_VERBS = ('similarity', 'summary', META_POST)
 
 
-class NlpCmd(ConfigMixin, ScrapyCommand):
+class NlpCmd(PostConfigMixin, ScrapyCommand):
     """
     Compute similarity scores from daily articles and save them
     to the db under the `POSTS['SIBLINGS_FIELD'] and POSTS['RELATED_FIELD'] settings
@@ -37,7 +37,7 @@ class NlpCmd(ConfigMixin, ScrapyCommand):
     meta_summary_uses_nlp = False
 
     # db handle
-    daily = MongoDaily(ConfigMixin.settings["CRAWL_DB_URI"])
+    daily = MongoDaily(PostConfigMixin.settings["CRAWL_DB_URI"])
 
     # ScrapyCommand overrides
     requires_project = True

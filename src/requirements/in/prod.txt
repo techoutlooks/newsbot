@@ -1,0 +1,4 @@
+-r base.txt
+git+https://github.com/techoutlooks/newsnlp.git
+git+https://github.com/techoutlooks/scrapy-newsutils.git
+dnspython==2.2.1

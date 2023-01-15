@@ -1,4 +1,0 @@
-#-c ../prod.txt
--r base.txt
--e file:///Users/ceduth/Devl/Projects/ARISE/backend/newsnlp
--e file:///Users/ceduth/Devl/Projects/scrapy-news-utils

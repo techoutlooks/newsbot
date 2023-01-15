@@ -1,4 +1,4 @@
-from news_utils.base.spiders import BasePostCrawler
+from newsutils.base.spiders import BasePostCrawler
 
 
 class GnAfricaGuinee(BasePostCrawler):
@@ -12,7 +12,7 @@ class GnAfricaGuinee(BasePostCrawler):
     allowed_domains = ['africaguinee.com']
     start_urls = ['https://www.africaguinee.com/']
 
-    # by `news_utils.base.spiders.NewsSpider`
+    # by `newsutils.scrapy.base.spiders.NewsSpider`
     country_code = 'GN'
     language = 'fr'
     post_images_xpath = "//figure/img/@src"

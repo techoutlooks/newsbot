@@ -1,0 +1,4 @@
+#-c ../prod.txt
+-r base.txt
+-e file:///Users/ceduth/Devl/Projects/Libs/newsnlp
+-e file:///Users/ceduth/Devl/Projects/Libs/scrapy-newsutils

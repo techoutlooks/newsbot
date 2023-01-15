@@ -1,3 +1,0 @@
--r base.txt
-git+https://github.com/techoutlooks/newsnlp.git
-git+https://github.com/techoutlooks/scrapy-news-utils.git
