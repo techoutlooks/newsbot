@@ -1,6 +1,11 @@
 # leeram-newsbot
 
-News crawling and semantic analysis using NLP.
+News crawling and semantic analysis using NLP. 
+Generate original title/content/category from any source using NLP techniques.
+Relies on two components:
+* `newsbot.crawler` leverages Scrapy to crawl news and run NLP-related commands.
+* `newsbot.ezines` downloads news by performing http requests to supported endpoints.
+
 
 ## Features (check the demo )
 - Create a spider with few lines of code
@@ -50,9 +55,8 @@ pip-sync src/requirements/dev.txt
     cd crawler && python scrapy crawlall && scrapy nlp
     ```
 
-* Or run scheduler script periodically:
+* Or run scheduler script periodically. Also fetches sport news and run NLP tasks.
     ```shell
-    
     python run.py
     ```
 
@@ -104,7 +108,7 @@ Note: -D: for date ranges, -d: for single dates
     scrapy crawlall -d 2022-04-09 -d 2022-04-10 -d 2022-04-24 -D from=2022-04-19 -D to=2022-04-21          
     ```
 
-3. run NLP tasks
+3. Run NLP tasks
 
 Cf. `TextSummarizer`, `TitleSummarizer`, `Categorizer` models from our
 [newsnlp](https://github.com/techoutlooks/newsnlp.git) package (dependency).
@@ -143,6 +147,26 @@ scrapy nlp -t siblings=0.35 -t related=0.15 -D from=2022-03-19 -d 2022-03-02
 
 ```
 
+### Env vars
+
+Following env vars with respective defaults supported by the project: 
+
+* `newsbot.crawler`
+  - CRAWL_DB_URI=mongodb://db:27017/scraped_news_db
+  - SIMILARITY_SIBLINGS_THRESHOLD=0.4
+  - SIMILARITY_RELATED_THRESHOLD=0.2
+
+
+* `newsbot.ezines` 
+  - TIMEOUT=1 - api requests timeout (seconds)
+
+
+* `src/run.py` script
+  - CRAWL_DAYS_FROM - same as `crawlall -D from=<from-date>`
+  - CRAWL_DAYS_TO - same as `crawlall -D to=<to-date>`
+  - CRAWL_DAYS - same as `crawlall -d <date>`
+  - CRAWL_SCHEDULE=20 - interval (minutes) between crawl+nlp jobs
+
 ### Docker
 
 Below still to check
@@ -162,7 +186,7 @@ docker-compose run --service-ports newsbot \
 ## Prod
 
 * Getting [ready for GCP](./doc/gcloud-init.md). Optional, do once per project) 
-* Run project as a [gcloud job](./doc/gcloud.md).
+* Run project as a [gcloud run job](./doc/gcloud.md).
 
 
 ## TODO

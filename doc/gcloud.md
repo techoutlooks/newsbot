@@ -9,7 +9,7 @@ gcloud config set project $PROJECT_ID
 
 * `gcloud config get project` checks current project.
 
-### Set env vars
+### Env setup for GCP
 
 - Set few useful env vars before proceeding. \
   Note: Ensure of correct project id from: `gcloud config list`. 
@@ -62,13 +62,12 @@ Following commands run for the `src` directory.
       --set-env-vars BUCKET=$BUCKET_NAME \
       --service-account $SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com \
       --memory 4Gi \
-      --max-retries 1 --task-timeout 1200 \
+      --max-retries 1 --task-timeout 1200 
     ```
 
 3. Run the job
     ```shell
-    gcloud beta run jobs execute newsbot \
-      --region $REGION 
+    gcloud beta run jobs execute newsbot
     ```
 
 ### Misc
