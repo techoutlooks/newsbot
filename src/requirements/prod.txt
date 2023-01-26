@@ -63,7 +63,7 @@ cython==0.29.23
 daily-query @ git+https://github.com/techoutlooks/daily-query.git
     # via scrapy-newsutils
 dnspython==2.2.1
-    # via -r requirements/in/base.txt
+    # via -r requirements/in/prod.txt
 feedfinder2==0.0.4
     # via newspaper3k
 feedparser==6.0.8
@@ -163,6 +163,16 @@ numpy==1.21.3
     #   thinc
     #   tifffile
     #   transformers
+nvidia-cublas-cu11==11.10.3.66
+    # via
+    #   nvidia-cudnn-cu11
+    #   torch
+nvidia-cuda-nvrtc-cu11==11.7.99
+    # via torch
+nvidia-cuda-runtime-cu11==11.7.99
+    # via torch
+nvidia-cudnn-cu11==8.5.0.96
+    # via torch
 ordered-set==4.1.0
     # via
     #   -r requirements/in/base.txt
@@ -287,6 +297,7 @@ sgmllib3k==1.0.0
 six==1.16.0
     # via
     #   automat
+    #   cycler
     #   feedfinder2
     #   parsel
     #   protego
@@ -353,6 +364,10 @@ wasabi==0.8.2
     # via
     #   spacy
     #   thinc
+wheel==0.38.4
+    # via
+    #   nvidia-cublas-cu11
+    #   nvidia-cuda-runtime-cu11
 zope-interface==5.4.0
     # via
     #   scrapy

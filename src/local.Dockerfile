@@ -23,5 +23,6 @@ COPY run.py  ./
 RUN python -m pip install pip-tools
 RUN python -m piptools sync
 
-# Crawl spiders and run nlp tasks periodically
+# Run crawlers and nlp tasks every 15mn
+ENV CRAWL_SCHEDULE 15
 CMD ["python", "run.py"]

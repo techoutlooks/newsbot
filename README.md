@@ -1,6 +1,4 @@
-
-
-# arise-newsbot
+# leeram-newsbot
 
 News crawling and semantic analysis using NLP.
 
@@ -19,21 +17,32 @@ News crawling and semantic analysis using NLP.
 
 ## Dev
 
+
+### Requirements
+
+* deps: `pip-tools==6.6.2`, `click=7.1.2` 
+
 ### Setup
 
-(Re-)create dev requirements files.
-Required before (re-)building Docker the image
+Install pip-tools
 ```shell
-pip-compile requirements/in/prod.txt --output-file requirements/prod.txt 
-pip-compile requirements/in/dev.txt  --output-file requirements/dev.txt 
+pip install -U pip-tools
+```
+
+(Re-)create dev requirements files. 
+**Important!**: Re-run required before (re-)building Docker the image
+```shell
+# run from the `src` folder.
+pip-compile --resolver=backtracking requirements/in/prod.txt --output-file requirements/prod.txt 
+pip-compile --resolver=backtracking requirements/in/dev.txt  --output-file requirements/dev.txt 
 
 
 ```
 Sync dev requirements to venv
 ```shell
+# run from `src` folder.
+pip-sync src/requirements/dev.txt 
 # pip-sync requirements/prod.txt requirements/dev.txt
-pip-sync requirements/dev.txt 
-
 ```
 
 * Run Scrapy commands individually, eg.:
@@ -137,175 +146,27 @@ scrapy nlp -t siblings=0.35 -t related=0.15 -D from=2022-03-19 -d 2022-03-02
 ### Docker
 
 Below still to check
+
 ```shell
+CRAWL_SCHEDULE=20 # runs every 20mn
 docker-compose run --service-ports newsbot \
   "cd crawler/ && scrapy crawlall && scrapy nlpsimilarity -t siblings=0.4 -t related=0.2 -d 2021-10-22 -d 2021-10-23"
 ```
 
 
-### Debugging
+## Debugging
 
-#### Strings to look for in logs
-
-
-2022-03-07 21:15:25 [crawlallcommand] INFO: crawlallcommand >> STARTED crawling news (2021-03-07 to 2021-03-08)
-2022-03-07 21:17:46 [crawlallcommand] INFO: crawlallcommand >> DONE crawling news (2021-03-07 to 2021-03-08)
+* [debugging hints](./doc/debug.md).
 
 
-INFO: Dumping Scrapy stats
- 'item_scraped_count': 5,
+## Prod
 
-
-
-## Prod (GCR, ie. Google Cloud Run)
-
-- Docs:
-    [1](https://cloud.google.com/run/docs/execute/jobs)
-
-- Install and authenticate `gcloud` CLI locally
-    ```shell
-    curl https://sdk.cloud.google.com | bash
-    gcloud init
-    ```
-
-- Set few useful env vars before proceeding. \
-  Note: Get valid project id from: `gcloud config list`
-    ```shell
-    
-    # newsbot 
-    CRAWL_DB_URI='mongodb+srv://techu:techu0910!@cluster0.6we1byk.mongodb.net/scraped_news_db?retryWrites=true&w=majority'
-    
-    # gcloud
-    REGION=europe-west1
-    PROJECT_ID=leeram
-    BOT_IMAGE_NAME=newsbot:v1
-    SERVICE_ACCOUNT=local-docker-service
-    GCP_KEY_PATH=~/Devl/Projects/ARISE/key.json
-    ```
-
-- Set global env vars
-    ```shell
-    gcloud config set core/project $PROJECT_ID
-    gcloud config set run/region $REGION
-    ```
-
-
-### Getting ready for GCR
-
-* Create service Account (required to make requests to Google APIs)
-* Push the app's docker image to their container registry
-
-
-2. Create new service account with appropriate permissions,
-   associate it with the project.
-   Could have also used a single `--role roles/owner` \
-   Refs: [1](https://cloud.google.com/sdk/gcloud/reference/projects/add-iam-policy-binding)
-
-    ```shell
-    gcloud iam service-accounts create local-docker-service 
-    PROJECT_ID=leeram 
-    gcloud projects add-iam-policy-binding $PROJECT_ID \
-        --member "serviceAccount:${SERVICE_ACCOUNT}@$PROJECT_ID.iam.gserviceaccount.com" \
-        --role "roles/storage.admin" \
-        --role "roles/run.admin"
-    ```
-
-4. Create and download service account key.json from CGP's IAM service.
-   (preferably outside git repo), and export it locally.
-    ```shell
-    gcloud iam service-accounts keys create ${GCP_KEY_PATH} \
-        --iam-account ${SERVICE_ACCOUNT}@${PROJECT_ID}.iam.gserviceaccount.com
-   
-    export GOOGLE_APPLICATION_CREDENTIALS=${GCP_KEY_PATH}
-    ```
-
-5. Authenticate Docker with the Container Registry service on GCR. \
-   Refs: [1](https://cloud.google.com/container-registry/docs/advanced-authentication)
-    ```shell
-    cat ${GCP_KEY_PATH} | docker login -u _json_key --password-stdin https://grc.io
-    ```
-   
-### Run job
-
-1. Enable cloud APIs: 
-    ```shell
-    gcloud services enable \
-        artifactregistry.googleapis.com \
-        cloudbuild.googleapis.com \
-        run.googleapis.com
-    ```
-   
-2. Build image, eg. `gcr.io/leeram/newsbot:v1`
-    ```shell
-    gcloud builds submit --tag gcr.io/$PROJECT_ID/$BOT_IMAGE_NAME .
-    ```
-
-3. Create the Cloud Run job `newsbot`
-    ```shell
-    gcloud beta run jobs create newsbot \
-      --image gcr.io/$PROJECT_ID/$BOT_IMAGE_NAME \
-      --set-env-vars CRAWL_DB_URI=$CRAWL_DB_URI \
-      --service-account $SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com \
-      --memory 1Gi
-    ```
-
-4. Run the job
-    ```shell
-    gcloud beta run jobs execute newsbot
-    ```
-
-### Misc
-
-* Check image
-```shell
-gcloud container images list-tags gcr.io/$PROJECT_ID/newsbot
-```
-
-* Describe the execution
-```shell
-gcloud beta run executions describe <EXECUTION_NAME>
-```
-
-* Update memory
-```shell
-gcloud beta run jobs update newsbot --memory 1Gi
-```
-
-* Update env vars
-```shell
-gcloud beta run jobs update newsbot  --set-env-vars CRAWL_DB_URI=$CRAWL_DB_URI
-
-```
-
-* Delete job
-```shell
-gcloud beta run jobs delete newsbot
-```
-
-
-
-## FIXME
-
-* Move code for fetching post's `.images`, `.top_image` to Pipeline/Middleware
-    https://github.com/scrapy/scrapy/issues/2436
-    https://doc.scrapy.org/en/latest/topics/spider-middleware.html#scrapy.spidermiddlewares.SpiderMiddleware.process_spider_output
-* 
-* 
+* Getting [ready for GCP](./doc/gcloud-init.md). Optional, do once per project) 
+* Run project as a [gcloud job](./doc/gcloud.md).
 
 
 ## TODO
 
-#### Anti scraper blocking: 
-Refs: [1](https://scrapfly.io/blog/web-scraping-with-scrapy/)
-
-
-- various plugins for proxy management, eg.:
-  - (scrapy-rotating-proxies)[https://github.com/TeamHG-Memex/scrapy-rotating-proxies],
-  - (scrapy-fake-useragent)[https://github.com/alecxe/scrapy-fake-useragent], for randomizing user agent headers. 
-
-- Browser emulation:
-  - like scrapy-playwright 
-  - scrapy-selenium (+GCP): 
-    [1](https://youtu.be/2LwrUu9yTAo),
-    [2](https://www.roelpeters.be/how-to-deploy-a-scraping-script-and-selenium-in-google-cloud-run/)
-- JS support via (Splash)[https://splash.readthedocs.io/en/stable/faq.html]
+* [Fixes](./doc/todo.md#fixme).
+* [Future](./doc/todo.md#todo).
+* Run dev and Docker image in conda rather than venv. cf `newsnlp` dep

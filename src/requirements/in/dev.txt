@@ -1,4 +1,9 @@
 #-c ../prod.txt
 -r base.txt
--e file:///Users/ceduth/Devl/Projects/Libs/newsnlp
--e file:///Users/ceduth/Devl/Projects/Libs/scrapy-newsutils
+-e file:///home/ceduth/Devl/Libs/newsnlp
+-e file:///home/ceduth/Devl/Libs/scrapy-newsutils
+
+
+# Uncomment iff local dev on OSX
+# -e file:///Users/ceduth/Devl/Libs/newsnlp
+# -e file:///Users/ceduth/Devl/Libs/scrapy-newsutils
