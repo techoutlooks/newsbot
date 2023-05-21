@@ -2,9 +2,13 @@
 
 News crawling and semantic analysis using NLP. 
 Generate original title/content/category from any source using NLP techniques.
-Relies on two components:
+
+Provides following two components for news fetching:
 * `newsbot.crawler` leverages Scrapy to crawl news and run NLP-related commands.
 * `newsbot.ezines` downloads news by performing http requests to supported endpoints.
+
+News publishing:
+* `newsbot`
 
 
 ## Features (check the demo )
@@ -17,6 +21,8 @@ Relies on two components:
   `nlp` command.
 
 ## TODO
+
+- publishing stats (`crawler.publish.stats`)
 - similarity across docs belonging to several days 
 
 
@@ -26,38 +32,59 @@ Relies on two components:
 ### Requirements
 
 * deps: `pip-tools==6.6.2`, `click=7.1.2` 
+* started MongoDB instance
+    ```shell
+    docker run --name mongo --restart=unless-stopped -d -p 27017:27017  -v mongodata:/data mongo 
+    ```
 
 ### Setup
 
-Install pip-tools
+* Install pip-tools
 ```shell
 pip install -U pip-tools
 ```
 
-(Re-)create dev requirements files. 
+* (Re-)create dev requirements files. 
 **Important!**: Re-run required before (re-)building Docker the image
 ```shell
 # run from the `src` folder.
 pip-compile --resolver=backtracking requirements/in/prod.txt --output-file requirements/prod.txt 
 pip-compile --resolver=backtracking requirements/in/dev.txt  --output-file requirements/dev.txt 
-
-
 ```
-Sync dev requirements to venv
+* Sync dev requirements to venv
 ```shell
 # run from `src` folder.
 pip-sync src/requirements/dev.txt 
 # pip-sync requirements/prod.txt requirements/dev.txt
 ```
+* Env vars setup
 
-* Run Scrapy commands individually, eg.:
-    ```shell
-    cd crawler && python scrapy crawlall && scrapy nlp
-    ```
+```shell
 
-* Or run scheduler script periodically. Also fetches sport news and run NLP tasks.
+# newsboard frontend url=http://localhost:3100
+export \
+  METAPOST_BASEURL='/posts' \
+  PROJECT_SETTINGS_MODULE=crawler.settings
+```
+
+
+### Quick start
+
+* Run all tasks at once, periodically. \
+This runs all spiders, fetches sport news, and run NLP tasks.
     ```shell
     python run.py
+    ```
+  
+* Run Scrapy commands individually, eg.:
+    ```shell
+    cd crawler 
+    python scrapy crawlall 
+    scrapy nlp
+    
+    # every 5mn, publish given day's posts to all channels  
+    CRAWL_SCHEDULE=5 scrapy publish -d 2023-05-19
+
     ```
 
 ### Syntax
@@ -84,9 +111,16 @@ Note: -D: for date ranges, -d: for single dates
 
 1. set env and cwd properly
     ```shell
+    cd newsbot/src/
     source venv/bin/activate
+   
+    export 
+        PROJECT_SETTINGS_MODULE=crawler.settings \
+        POSTS=metapost_baseurl=http://localhost:3100/posts \
+        PUBLISH=facebook_page_id\=114619074914814,facebook_page_access_token\=EAAwyeRawKuUBANX0rMywMrLHHgZAQbT90pddXLp8jZBaZBfM6YP0AWGWHnk4SppELnjTt3vCJtZBcJbZCJkWpoWSwez77uQaZAkJx6WUrO7MQJUmfToHPro1h691V1E55AAOUEXhSK6xrPYMaSWEhC8tQ6qZAHDhMfJNgtrQJhQTrfZBMaa2fRu6
+    
     python crawler/commands/nlp.py -t siblings=0.40 -t related=0.2 -d 2022-03-20
-    cd backend/newsbot/crawler/
+
     ```
 
 2. crawl all spiders in the `crawler/spiders` folder

@@ -15,7 +15,7 @@ WORKDIR /newsbot
 # Copy files
 COPY requirements/prod.txt ./requirements.txt
 COPY crawler ./crawler
-COPY ezines ./ezines
+COPY crawler/ezines ./ezines
 COPY scrapy.cfg ./
 COPY run.py  ./
 

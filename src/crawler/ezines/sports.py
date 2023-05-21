@@ -9,7 +9,7 @@ configure()
 
 
 # fetch sports news script
-from newsutils.requests import Sports
+from newsutils.ezines import Sports
 if __name__ == '__main__':
 
     # fetch all sport events

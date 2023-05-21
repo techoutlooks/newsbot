@@ -5,7 +5,7 @@ from scrapy.utils.conf import arglist_to_dict
 from scrapy.utils.project import get_project_settings
 from twisted.internet import defer, reactor
 
-from newsutils.base import PostConfigMixin
+from newsutils.conf.mixins import PostConfigMixin
 from newsutils.logging import NamespaceFormatter, log_running
 from daily_query.helpers import mk_date
 

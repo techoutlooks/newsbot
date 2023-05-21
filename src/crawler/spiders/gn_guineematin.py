@@ -1,4 +1,4 @@
-from newsutils.base.spiders import BasePostCrawler
+from newsutils.crawl.spiders import BasePostCrawler
 
 
 class GnGuineeMatin(BasePostCrawler):

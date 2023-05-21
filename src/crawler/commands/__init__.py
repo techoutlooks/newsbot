@@ -1,5 +1,5 @@
 from newsutils.conf import configure
-configure()
-
-
-from .crawlall import *
+if configure():
+    from .crawlall import *
+    from .nlp import *
+    from .publish import *

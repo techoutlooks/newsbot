@@ -9,4 +9,5 @@ image-quality==1.2.7
 schedule==1.1.0
 ordered-set==4.1.0
 rich==12.0.1
+aenum==3.1.12
 # END requirements by scrapy-newsutils

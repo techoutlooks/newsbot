@@ -6,6 +6,7 @@
 #     https://docs.scrapy.org/en/latest/topics/settings.html
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+from newsutils.helpers import get_env
 
 BOT_NAME = 'crawler'
 
@@ -96,12 +97,43 @@ COMMANDS_MODULE = 'crawler.commands'
 # ======
 
 BRANDING = {
-    "LOGO_URL": "/img/logo/logo.png",
-    "BOT_IMAGE_URL": "img/bot-image.svg"
+    "logo_url": "/img/logo/logo.png",
+    "bot_image_url": "img/bot-image.svg"
 }
 
 POSTS = {
-    "SIMILARITY_SIBLINGS_THRESHOLD": .1,
-    "SIMILARITY_RELATED_THRESHOLD": .05,
-    "SIMILARITY_MAX_DOCS": 5,
+
+    # NLP
+    # ----------------------------------
+    "similarity_siblings_threshold": .1,
+    "similarity_related_threshold": .05,
+    "similarity_max_docs": 5,
+
+    # get metapost baseurl from the env ideally
+    "metapost_baseurl": get_env("METAPOST_BASEURL")
+
+}
+
+# para
+PUBLISH = {
+
+    # channels to publish to. auth required.
+    "channels":  ['leeram-telegram', 'leeram-facebook'],
+    "dimensions": ['status'],
+    "metrics": ['likes', 'follows', 'visits'],
+
+    # publishing service at `leeram-analytics/publishapi`
+    # with auth params to acquire an access token for POSTing
+    "publish_url": "http://localhost:15102/v1/publish",
+    "auth": {
+        "auth_url": "https://localhost:8443",
+        "client_id": "publish",
+        "realm_name": "oneauth",
+        "username": "leeram-publish", "password": "techu0910!",
+        "insecure": get_env("AUTH_INSECURE", True, coerce=True)
+    },
+
+    # save stats locally to mongo collection 'publish'
+    "collection": "publish",
+
 }

@@ -2,6 +2,9 @@
 
 ## FIXME
 
+* `PublishCmd`: request stats from `leeram-analytics/publishapi` 
+* `PublishCmd`: do not publish with same version twice (reject minor changes, cf `newsutils.pipelines`) 
+* `PublishCmd`: ensure channels are available before attempting publishing
 * `scrapy nlp` downloading 2G+ data !
   HINT: ack `newsutils/data/` directory in the Docker bot's image.
 
