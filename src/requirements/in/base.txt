@@ -1,13 +1,1 @@
-# START requirements by scrapy-newsutils
-Scrapy==2.5.0
-newspaper3k==0.2.8
-nltk==3.6.2
-pycountry==20.7.3
-pymongo==3.11.4
-Pillow==8.2.0
-image-quality==1.2.7
-schedule==1.1.0
-ordered-set==4.1.0
-rich==12.0.1
 aenum==3.1.12
-# END requirements by scrapy-newsutils

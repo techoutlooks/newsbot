@@ -1,7 +1,7 @@
 # Local:
 #   DOCKER_IMAGE=newsbot:v1
 #   CRAWL_DB_URI=mongodb+srv://techu:<password>@cluster0.6we1byk.mongodb.net/scraped_news_db/?retryWrites=true&w=majority
-#   docker build --ssh default -t $DOCKER_IMAGE -f gcsfuse.Dockerfile .
+#   docker build --ssh default -t $DOCKER_IMAGE -f cloudrun.Dockerfile .
 #   docker run -v newsbot-data:/newsbot --network host --name newsbot $DOCKER_IMAGE
 # GCP
 #   gcloud builds submit --tag gcr.io/$PROJECT_ID/$DOCKER_IMAGE .
@@ -45,12 +45,33 @@ ENV CACHE_DIR ${MNT_DIR}/.cache
 ENV DATA_DIR ${MNT_DIR}/data
 
 # Copy code to container image
-COPY requirements/prod.txt ./requirements.txt
-COPY . ./
+COPY src/requirements/prod.txt ./requirements.txt
+COPY src ./
 
 # Install app packages, etc.
 RUN python -m pip install pip-tools
 RUN python -m piptools sync
+
+# Generate script that mounts the GCS bucket
+# https://www.docker.com/blog/introduction-to-heredocs-in-dockerfiles/
+COPY <<EOF gcsfuse_run.sh
+#!/usr/bin/env bash
+set -eo pipefail
+
+# Create mount directory for service
+mkdir -p $MNT_DIR
+
+echo "gcsfuse > mounting bucket $BUCKET."
+gcsfuse --debug_gcs --debug_fuse $BUCKET $MNT_DIR
+echo "gcsfuse > mounting completed: $BUCKET -> $MNT_DIR."
+
+# Run crawlers and nlp tasks only once
+# Specifically set scheduler on Cloud Run for periodic execution
+exec python run.py &
+
+# Exit immediately when one of the background processes terminate.
+wait -n
+EOF
 
 # Ensure the script is executable
 RUN chmod +x $APP_HOME/gcsfuse_run.sh

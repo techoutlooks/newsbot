@@ -18,9 +18,22 @@ CMD_VERBS = ('similarity', 'summary', METAPOST)
 
 class NlpCmd(DayCmd):
     """
-    Compute similarity scores from daily articles and save them
-    to the db under the `POSTS['SIBLINGS_FIELD'] and POSTS['RELATED_FIELD'] settings
+    Scrapy command that runs NLP-related tasks across several days.
+    Cf. `newsutils.nlp.DayNlp.__doc__`
+
+    Syntax:
+    -------
+         scrapy nlp \
+          [-D from=<%Y-%m-%d> -D to=<%Y-%m-%d>] \
+          [-d <%Y-%m-%d>] \
+          [-t siblings=<%f>] [-t related=<%f>]
+
+    Notes:
+    ------
+        (1) Detects existing processes: exits if another instance already runs.
+
     Usage:
+    ------
         scrapy nlp [subtask] [thresholds] [dates]
         nlp subtask selection: `similarity|summary|metapost`
 
@@ -54,7 +67,6 @@ class NlpCmd(DayCmd):
 
     # ScrapyCommand overrides
     requires_project = True
-    log_prefix = "nlp"  # picked up by the logger. cf `LoggingMixin`.
 
     def short_desc(self):
         return "Update day's (default, today) articles with similarity scores"
@@ -66,15 +78,15 @@ class NlpCmd(DayCmd):
 
         ScrapyCommand.add_options(self, parser)
 
-        parser.add_option(
+        parser.add_argument(
             "-D", "--days", dest="days_range", action="append", default=[], metavar="NAME=VALUE",
             help="articles matching date range; eg. -D from=2022-03-19 [to=2022-04-22]."
                  "no option supplied defaults to today's articles.")
-        parser.add_option(
+        parser.add_argument(
             "-d", "--day", dest="days_list", action="append", default=[], metavar="DAY",
             help=f"articles for given day only; eg. `-d 2021-06-23. "
                  f"(default: -d {mk_date()})")
-        parser.add_option(
+        parser.add_argument(
             "-t", "--threshold", dest="thresholds", action="append", default=[], metavar="NAME=VALUE",
             help=f"articles matching given dates only. (default: "
                  f" -t siblings={self.settings['POSTS']['similarity_siblings_threshold']})"
@@ -110,6 +122,12 @@ class NlpCmd(DayCmd):
             f"unsupported verb: {verb}. " \
             f"valid actions: {', '.join(CMD_VERBS)}"
 
+        existed = self.is_running()
+        if existed:
+            self.log_task_ended("Exiting: instance [{pid}] already running:\n {cmdline}".format(
+                pid=existed.pid, cmdline=existed.cmdline()))
+            raise SystemExit(0)
+
         self.save(
             verb=verb,
             days={'days_from': opts.days_range.get('from'),
@@ -127,7 +145,7 @@ class NlpCmd(DayCmd):
             total=0, saved=0, words=0,
             similarity=0, summary=0, metapost=0)
 
-        fmt = NamespaceFormatter({"from": None, "to": None})
+        fmt = NamespaceFormatter({"from": 'N/A', "to": 'N/A'})
         msg = fmt.format("`scrapy nlp` (docs from {days_from} to {days_to}) +{days}", **days)
 
         # ensure day correspond to an existing database collection

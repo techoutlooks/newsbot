@@ -25,11 +25,11 @@ class CrawlAllCmd(PostConfigMixin, ScrapyCommand):
 
     def add_options(self, parser):
         ScrapyCommand.add_options(self, parser)
-        parser.add_option(
+        parser.add_argument(
             "-D", "--days", dest="days_range", action="append", default=[], metavar="NAME=VALUE",
             help="articles matching date range; eg. -D from=2022-03-19 [to=2022-04-22]."
                  "no option supplied defaults to today's articles.")
-        parser.add_option(
+        parser.add_argument(
             "-d", "--day", dest="days_list", action="append", default=[], metavar="DAY",
             help=f"articles for given day only; eg. `-d 2021-06-23. "
                  f"(default: -d {mk_date()})")
@@ -51,7 +51,7 @@ class CrawlAllCmd(PostConfigMixin, ScrapyCommand):
     @defer.inlineCallbacks
     def crawl_all(self, *args, **kwargs):
 
-        fmt = NamespaceFormatter({"from": None, "to": None})
+        fmt = NamespaceFormatter({"from": 'N/A', "to": 'N/A'})
         msg = fmt.format("crawl_all: docs from {days_from} to {days_to} +{days}", **kwargs['days'])
 
         for spider in self.spiders:

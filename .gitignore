@@ -1,5 +1,6 @@
 .idea/
 venv/
+data/
 src/.pytest_cache/
 .coverage
 *.py[cod]
@@ -9,3 +10,4 @@ __pycache__/*
 .DS_Store
 Dockerfile
 key.json
+.python-version

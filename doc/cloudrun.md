@@ -39,18 +39,30 @@ Following commands run for the `src` directory.
     - via cmd line
 
     ```shell
-    cp gcsfuse.Dockerfile Dockerfile
+    cp cloudrun.Dockerfile Dockerfile
     gcloud builds submit --tag gcr.io/$PROJECT_ID/$IMAGE_NAME .
     ```
     - via `cloudbuild.yaml`
+    https://cloud.google.com/build/docs/configuring-builds/create-basic-configuration
+    ```shell
+    cat << EOF > cloudbuild.yaml 
+   
+    # cloudbuild.yaml 
+    steps:
+    - name: 'gcr.io/cloud-builders/docker'
+      args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/newsbot:v1', '.' ]
+    images:
+      - 'gcr.io/$PROJECT_ID/newsbot:v1'
+    EOF    
+    ```
     ```shell
     gcloud builds submit --config cloudbuild.yaml .
     ```
-    - via Docker (ensure Docker is [configured](./gcloud-init.md#using-docker--way-2-) for GCP)
+   - via Docker (ensure Docker is [configured](./gcloud-init.md#using-docker--way-2-) for GCP)
     ```shell
-    docker build --ssh default -t $IMAGE_NAME -f gcsfuse.Dockerfile .
-    docker tag $IMAGE_NAME gcr.io/$PROJECT_ID/$IMAGE_NAME
-    docker push gcr.io/$PROJECT_ID/$IMAGE_NAME
+     docker build --ssh default -t $IMAGE_NAME -f cloudrun.Dockerfile .
+     docker tag $IMAGE_NAME gcr.io/$PROJECT_ID/$IMAGE_NAME
+     docker push gcr.io/$PROJECT_ID/$IMAGE_NAME
     ```
 
 2. Create scheduled job `newsbot` (runs every 20mn). [cmd ref](https://cloud.google.com/sdk/gcloud/reference/beta/run/jobs/create).

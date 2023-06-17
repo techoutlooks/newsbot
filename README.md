@@ -1,4 +1,4 @@
-# leeram-newsbot
+# leeram-news/newsbot
 
 News crawling and semantic analysis using NLP. 
 Generate original title/content/category from any source using NLP techniques.
@@ -31,7 +31,7 @@ News publishing:
 
 ### Requirements
 
-* deps: `pip-tools==6.6.2`, `click=7.1.2` 
+* deps: `newsutils`, `conda`, `MongoDb`
 * started MongoDB instance
     ```shell
     docker run --name mongo --restart=unless-stopped -d -p 27017:27017  -v mongodata:/data mongo 
@@ -64,7 +64,7 @@ pip-sync src/requirements/dev.txt
 # newsboard frontend url=http://localhost:3100
 export \
   METAPOST_BASEURL='/posts' \
-  PROJECT_SETTINGS_MODULE=crawler.settings
+  SCRAPY_SETTINGS_MODULE=crawler.settings
 ```
 
 
@@ -115,7 +115,7 @@ Note: -D: for date ranges, -d: for single dates
     source venv/bin/activate
    
     export 
-        PROJECT_SETTINGS_MODULE=crawler.settings \
+        SCRAPY_SETTINGS_MODULE=crawler.settings \
         POSTS=metapost_baseurl=http://localhost:3100/posts \
         PUBLISH=facebook_page_id\=114619074914814,facebook_page_access_token\=EAAwyeRawKuUBANX0rMywMrLHHgZAQbT90pddXLp8jZBaZBfM6YP0AWGWHnk4SppELnjTt3vCJtZBcJbZCJkWpoWSwez77uQaZAkJx6WUrO7MQJUmfToHPro1h691V1E55AAOUEXhSK6xrPYMaSWEhC8tQ6qZAHDhMfJNgtrQJhQTrfZBMaa2fRu6
     
@@ -220,7 +220,8 @@ docker-compose run --service-ports newsbot \
 ## Prod
 
 * Getting [ready for GCP](./doc/gcloud-init.md). Optional, do once per project) 
-* Run project as a [gcloud run job](./doc/gcloud.md).
+* Deploy in [GKE]()
+* Deploy as a [gcloud run job](./doc/cloudrun.md).
 
 
 ## TODO

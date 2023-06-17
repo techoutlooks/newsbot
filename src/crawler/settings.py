@@ -108,9 +108,7 @@ POSTS = {
     "similarity_siblings_threshold": .1,
     "similarity_related_threshold": .05,
     "similarity_max_docs": 5,
-
-    # get metapost baseurl from the env ideally
-    "metapost_baseurl": get_env("METAPOST_BASEURL")
+    "metapost_baseurl": get_env("METAPOST_BASEURL", "/posts/", coerce=True)
 
 }
 

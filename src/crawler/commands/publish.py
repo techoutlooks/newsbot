@@ -57,29 +57,29 @@ class PublishCmd(PublishConfigMixin, DayCmd):
         ScrapyCommand.add_options(self, parser)
 
         # date filter
-        parser.add_option(
+        parser.add_argument(
             "-D", "--days", dest="days_range", action="append", default=[], metavar="DATE",
             help="posts matching date range; eg. -D from=2022-03-19 [to=2022-04-22]."
                  "no option supplied defaults to today's posts.")
-        parser.add_option(
+        parser.add_argument(
             "-d", "--day", dest="days_list", action="append", default=[], metavar="DATE",
             help=f"posts for given day only; eg. `-d 2021-06-23. "
                  f"(default: -d {mk_date()})")
 
         # publish task options
-        parser.add_option(
+        parser.add_argument(
             "-p", "--private", dest="private", action="store_true",
             help=f"should create public/private posts?; default is True")
 
         # metrics retrival options
-        parser.add_option(
+        parser.add_argument(
             "-M", "--pull-metrics", dest="pull_metrics", action="append", default=[],
             metavar="NAME=VALUE",
             help=f"pull publisher-maintained metrics; "
                  f"eg. `-M dimensions=status,feeds -M metrics=follows,likes,visits`.")
 
         # task filtering options
-        parser.add_option(
+        parser.add_argument(
             "-k", "--skip-task", dest="skip_tasks", action="append", default=[], metavar="DATE",
             help=f"skip selected tasks eg. `-k publish -k pull_metrics`. "
                  f"(default: -d {mk_date()})")
@@ -144,7 +144,7 @@ class PublishCmd(PublishConfigMixin, DayCmd):
 
         counts = dotdict(requested=0, queued=0)
 
-        fmt = NamespaceFormatter({"from": None, "to": None})
+        fmt = NamespaceFormatter({"from": 'N/A', "to": 'N/A'})
         msg = fmt.format("`scrapy publish {channels}` (docs from {days_from} to {days_to}) +{days}",
                          **days, **{"channels": channels})
 
