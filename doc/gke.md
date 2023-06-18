@@ -11,7 +11,6 @@
 
     ```shell
     cd ..
-    #docker build . -t $REGISTRY/newsbot:$TAG --no-cache --pull \
     docker build . -t $REGISTRY/newsbot:$TAG \
       && docker tag localhost:5001/newsbot:$TAG europe-west1-docker.pkg.dev/$PROJECT/$REPOSITORY/newsbot:$TAG \
       && docker push europe-west1-docker.pkg.dev/$PROJECT/$REPOSITORY/newsbot:1.0

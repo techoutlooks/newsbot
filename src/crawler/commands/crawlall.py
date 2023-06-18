@@ -1,23 +1,19 @@
+from newsutils.crawl.commands import PostCmd
 from scrapy.commands import ScrapyCommand
-from scrapy.crawler import CrawlerRunner
 from scrapy.exceptions import UsageError
 from scrapy.utils.conf import arglist_to_dict
-from scrapy.utils.project import get_project_settings
 from twisted.internet import defer, reactor
 
-from newsutils.conf.mixins import PostConfigMixin
 from newsutils.logging import NamespaceFormatter, log_running
 from daily_query.helpers import mk_date
 
 
-class CrawlAllCmd(PostConfigMixin, ScrapyCommand):
+class CrawlAllCmd(PostCmd):
     """
     https://gist.github.com/gustavorps/0df8bf6b096ecbdca694dbed96d0a334
     """
 
     requires_project = True
-    runner = CrawlerRunner(get_project_settings())
-    spiders = runner.spider_loader.list()
     # log_prefix = "crawling news"
 
     def short_desc(self):
@@ -27,11 +23,11 @@ class CrawlAllCmd(PostConfigMixin, ScrapyCommand):
         ScrapyCommand.add_options(self, parser)
         parser.add_argument(
             "-D", "--days", dest="days_range", action="append", default=[], metavar="NAME=VALUE",
-            help="articles matching date range; eg. -D from=2022-03-19 [to=2022-04-22]."
-                 "no option supplied defaults to today's articles.")
+            help="posts matching date range; eg. -D from=2022-03-19 [to=2022-04-22]."
+                 "no option supplied defaults to today's posts.")
         parser.add_argument(
             "-d", "--day", dest="days_list", action="append", default=[], metavar="DAY",
-            help=f"articles for given day only; eg. `-d 2021-06-23. "
+            help=f"posts published on given day only; eg. `-d 2021-06-23. "
                  f"(default: -d {mk_date()})")
 
     def process_options(self, args, opts):
@@ -54,13 +50,13 @@ class CrawlAllCmd(PostConfigMixin, ScrapyCommand):
         fmt = NamespaceFormatter({"from": 'N/A', "to": 'N/A'})
         msg = fmt.format("crawl_all: docs from {days_from} to {days_to} +{days}", **kwargs['days'])
 
-        for spider in self.spiders:
+        for spider in self.crawler_process.spider_loader.list():
             # enables passing custom msg to logger, better than
             # @log_running('a static msg ...')
             # def crawl(self, spider, *args, **kwargs):
             #     return self.runner.crawl(spider, *args, **kwargs)
             crawl_task = lambda cmd, *args, **kwargs: \
-                cmd.runner.crawl(spider, *args, **kwargs)
+                cmd.crawler_process.crawl(spider, *args, **kwargs)
             yield log_running(f"crawling {spider}", msg)(crawl_task)\
                 (self, spider, *args, **kwargs)
 

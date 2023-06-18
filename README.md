@@ -1,14 +1,8 @@
 # leeram-news/newsbot
 
 News crawling and semantic analysis using NLP. 
-Generate original title/content/category from any source using NLP techniques.
-
-Provides following two components for news fetching:
-* `newsbot.crawler` leverages Scrapy to crawl news and run NLP-related commands.
-* `newsbot.ezines` downloads news by performing http requests to supported endpoints.
-
-News publishing:
-* `newsbot`
+Generate original caption/summary/category from scraped post using NLP techniques.
+Cf. README.md file from package `newsutils` for a ride on features.
 
 
 ## Features (check the demo )
@@ -39,58 +33,50 @@ News publishing:
 
 ### Setup
 
-* Install pip-tools
-```shell
-pip install -U pip-tools
-```
+1. Setup virtualenv  
+    ```shell
+    cd newsbot/src/
+    source venv/bin/activate
+    pip install -U pip-tools
+    ```
 
-* (Re-)create dev requirements files. 
+2. (Re-)create dev requirements files (optional)
 **Important!**: Re-run required before (re-)building Docker the image
-```shell
-# run from the `src` folder.
-pip-compile --resolver=backtracking requirements/in/prod.txt --output-file requirements/prod.txt 
-pip-compile --resolver=backtracking requirements/in/dev.txt  --output-file requirements/dev.txt 
-```
-* Sync dev requirements to venv
-```shell
-# run from `src` folder.
-pip-sync src/requirements/dev.txt 
-# pip-sync requirements/prod.txt requirements/dev.txt
-```
-* Env vars setup
-
-```shell
-
-# newsboard frontend url=http://localhost:3100
-export \
-  METAPOST_BASEURL='/posts' \
-  SCRAPY_SETTINGS_MODULE=crawler.settings
-```
-
-
-### Quick start
-
-* Run all tasks at once, periodically. \
-This runs all spiders, fetches sport news, and run NLP tasks.
     ```shell
-    python run.py
+    # run from the `src` folder.
+    pip-compile --resolver=backtracking requirements/in/prod.txt --output-file requirements/prod.txt 
+    pip-compile --resolver=backtracking requirements/in/dev.txt  --output-file requirements/dev.txt 
     ```
-  
-* Run Scrapy commands individually, eg.:
+
+3. Sync dev requirements to venv
     ```shell
-    cd crawler 
-    python scrapy crawlall 
-    scrapy nlp
+    # run from `src` folder.
+    pip-sync src/requirements/dev.txt 
+    # pip-sync requirements/prod.txt requirements/dev.txt
+    ```
+   
+* Envvars setup
+
+    ```shell
     
-    # every 5mn, publish given day's posts to all channels  
-    CRAWL_SCHEDULE=5 scrapy publish -d 2023-05-19
-
+    # newsboard frontend url=http://localhost:3100
+    export \
+      METAPOST_BASEURL='/posts' \
+      SCRAPY_SETTINGS_MODULE=crawler.settings
     ```
 
-### Syntax
 
-Note: -D: for date ranges, -d: for single dates
+### Define scrapers
 
+Cf. `newsutils/README.md`
+
+  
+### Commands & syntax
+
+Notes: 
+* `-D`: for date ranges, `-d`: for single dates 
+* Commands may also be invoked directly eg.,\
+`python crawler/commands/nlp.py -t siblings=0.40 -t related=0.2 -d 2022-03-2`
 
 1. run all spiders
     ```  
@@ -99,7 +85,11 @@ Note: -D: for date ranges, -d: for single dates
       [-d <%Y-%m-%d>] \
     ```
 
-2. update similarity based on thresholds (-t option)
+2. Run all NLP tasks:
+- update similarity based on thresholds (-t option)
+- generate metapost from similar (sibling) posts. 
+This involves performing model inference to generate original:
+caption, summary and category for any given scraped post.
     ```  
      scrapy nlp \
       [-D from=<%Y-%m-%d> -D to=<%Y-%m-%d>] \ 
@@ -107,23 +97,38 @@ Note: -D: for date ranges, -d: for single dates
       [-t siblings=<%f>] [-t related=<%f>]
     ```
 
-### Examples
-
-1. set env and cwd properly
+### Quick start
+  
+* Following required chdir to Scrapy project dir
     ```shell
-    cd newsbot/src/
-    source venv/bin/activate
-   
-    export 
-        SCRAPY_SETTINGS_MODULE=crawler.settings \
-        POSTS=metapost_baseurl=http://localhost:3100/posts \
-        PUBLISH=facebook_page_id\=114619074914814,facebook_page_access_token\=EAAwyeRawKuUBANX0rMywMrLHHgZAQbT90pddXLp8jZBaZBfM6YP0AWGWHnk4SppELnjTt3vCJtZBcJbZCJkWpoWSwez77uQaZAkJx6WUrO7MQJUmfToHPro1h691V1E55AAOUEXhSK6xrPYMaSWEhC8tQ6qZAHDhMfJNgtrQJhQTrfZBMaa2fRu6
-    
-    python crawler/commands/nlp.py -t siblings=0.40 -t related=0.2 -d 2022-03-20
-
+    cd src/crawler
     ```
 
-2. crawl all spiders in the `crawler/spiders` folder
+* Run all spiders, scrape today's posts only.
+    ```shell 
+    python scrapy crawlall 
+    ```
+
+* Perform NLP task on today's posts.
+    ```shell
+    scrapy nlp
+    ```
+
+* Publish given day's posts to all channels 
+    ```shell
+    scrapy publish facebook,twitter -p -D from=2023-03-21 -M metrics=follows,likes,visits -M dimensions=status,feeds -k publish
+    
+    ```
+
+* Run all above tasks at once, periodically with 10 minutes interval. \
+This runs all spiders, fetches sport news, and run NLP tasks.
+    ```shell
+    CRAWL_SCHEDULE=10  src/run.py
+    ```
+
+### Advanced usage
+
+* Crawl all spiders
     ```shell
     
     # crawl all posts with regardless their publish time  
@@ -142,7 +147,7 @@ Note: -D: for date ranges, -d: for single dates
     scrapy crawlall -d 2022-04-09 -d 2022-04-10 -d 2022-04-24 -D from=2022-04-19 -D to=2022-04-21          
     ```
 
-3. Run NLP tasks
+* Run NLP tasks
 
 Cf. `TextSummarizer`, `TitleSummarizer`, `Categorizer` models from our
 [newsnlp](https://github.com/techoutlooks/newsnlp.git) package (dependency).
@@ -166,8 +171,7 @@ scrapy nlp summary -t siblings=0.10 -t related=0.05 -d 2022-05-16
 scrapy nlp metapost -t siblings=0.10 -t related=0.05 -d 2022-05-16
 ```
 
-
-Playing around with dates
+* Playing around with dates
 
 ```shell
 # single dates
@@ -178,7 +182,6 @@ scrapy nlp -t siblings=0.40 -t related=0.2 -D from=2022-03-19
 
 # mixed date range and days
 scrapy nlp -t siblings=0.35 -t related=0.15 -D from=2022-03-19 -d 2022-03-02
-
 ```
 
 ### Env vars
@@ -203,13 +206,16 @@ Following env vars with respective defaults supported by the project:
 
 ### Docker
 
-Below still to check
+Build Docker image locally. 
 
 ```shell
-CRAWL_SCHEDULE=20 # runs every 20mn
-docker-compose run --service-ports newsbot \
-  "cd crawler/ && scrapy crawlall && scrapy nlpsimilarity -t siblings=0.4 -t related=0.2 -d 2021-10-22 -d 2021-10-23"
+export TAG=1.0 REGISTRY=localhost:5001
+docker build . -t $REGISTRY/newsbot:$TAG
 ```
+
+Notes: 
+* `localhost:5001` is local Docker registry (needed for testing in local KinD Kubernetes cluster)
+* Add `--no-cache --pull` to ignore cached and pulled layers.
 
 
 ## Debugging
@@ -220,7 +226,7 @@ docker-compose run --service-ports newsbot \
 ## Prod
 
 * Getting [ready for GCP](./doc/gcloud-init.md). Optional, do once per project) 
-* Deploy in [GKE]()
+* Deploy to Kubernetes cluster in [GKE](./doc/gke.md)
 * Deploy as a [gcloud run job](./doc/cloudrun.md).
 
 

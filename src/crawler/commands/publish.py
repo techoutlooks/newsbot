@@ -17,7 +17,7 @@ from daily_query.helpers import mk_date
 
 class PublishCmd(PublishConfigMixin, DayCmd):
     """
-    Runs following tasks sequentially:
+    Runs following subtasks sequentially:
 
     (1) Publishes posts of given type to selected publisher channels
         (this is the default task), then
@@ -81,7 +81,7 @@ class PublishCmd(PublishConfigMixin, DayCmd):
         # task filtering options
         parser.add_argument(
             "-k", "--skip-task", dest="skip_tasks", action="append", default=[], metavar="DATE",
-            help=f"skip selected tasks eg. `-k publish -k pull_metrics`. "
+            help=f"skip selected subtasks eg. `-k publish -k pull_metrics`. "
                  f"(default: -d {mk_date()})")
 
     def process_options(self, args, opts):
