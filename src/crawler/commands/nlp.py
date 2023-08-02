@@ -1,5 +1,4 @@
 from daily_query.helpers import mk_date
-from newsutils.conf.mixins import PostConfigMixin
 from newsutils.crawl import DayCmd
 from newsutils.nlp import DayNlp
 from newsutils.conf import METAPOST
@@ -8,7 +7,7 @@ from scrapy.commands import ScrapyCommand
 from scrapy.exceptions import UsageError
 from scrapy.utils.conf import arglist_to_dict
 
-from daily_query.mongo import MongoDaily, Collection
+from daily_query.mongo import Collection
 from newsutils.logging import log_running, NamespaceFormatter
 
 # type of summary to generate/save, whether one per post, or
@@ -38,24 +37,24 @@ class NlpCmd(DayCmd):
         nlp subtask selection: `similarity|summary|metapost`
 
         # run all subtasks, with default thresholds, and various date selection options
-        >>> scrapy nlp                  # today's posts, runs all subtasks
-        >>> scrapy nlp -d 2021-08-28    # specific day, default thresholds
-        >>> scrapy nlp -d 2021-08-28 -d 2021-08-29  # date list
+        $ scrapy nlp                  # today's posts, runs all subtasks
+        $ scrapy nlp -d 2021-08-28    # specific day, default thresholds
+        $ scrapy nlp -d 2021-08-28 -d 2021-08-29  # date list
 
         # with specific thresholds (same date options apply)
-        >>> scrapy nlp -t siblings=0.4 -t related=0.2
+        $ scrapy nlp -t siblings=0.4 -t related=0.2
 
         # only compute posts similarity (same date options apply)
-        >>> scrapy nlp similarity -t siblings=0.10 -t related=0.05 -D from=2022-05-20
+        $ scrapy nlp similarity -t siblings=0.10 -t related=0.05 -D from=2022-05-20
 
         # only perform summarisation (same date options apply)
-        >>> scrapy nlp summary -t siblings=0.10 -t related=0.05 -D from=2022-05-20
+        $ scrapy nlp summary -t siblings=0.10 -t related=0.05 -D from=2022-05-20
 
         # only generate metaposts (same date options apply)
-        >>> scrapy nlp metapost -t siblings=0.10 -t related=0.05 -D from=2022-05-20
+        $ scrapy nlp metapost -t siblings=0.10 -t related=0.05 -D from=2022-05-20
 
 
-    # TODO: try more sophisticated methods eg. LDA,
+    TODO: try more sophisticated methods eg. LDA,
         instead of relying on newspaper3k/goose3 extractive summary (`summary` field).
     """
 
@@ -84,34 +83,55 @@ class NlpCmd(DayCmd):
                  "no option supplied defaults to today's articles.")
         parser.add_argument(
             "-d", "--day", dest="days_list", action="append", default=[], metavar="DAY",
-            help=f"articles for given day only; eg. `-d 2021-06-23. "
+            help=f"match post published on given days only; eg. `-d 2021-06-23. "
                  f"(default: -d {mk_date()})")
         parser.add_argument(
             "-t", "--threshold", dest="thresholds", action="append", default=[], metavar="NAME=VALUE",
-            help=f"articles matching given dates only. (default: "
+            help=f"match posts past minimum threshold values only. (defaults: "
                  f" -t siblings={self.settings['POSTS']['similarity_siblings_threshold']})"
-                 f" -t related={self.settings['POSTS']['similarity_related_threshold']})")
+                 f" -t related={self.settings['POSTS']['similarity_related_threshold']})"
+                 f" -t sumlen={self.settings['POSTS']['summary_minimum_length']})")
+
+        # boolean flags
+        parser.add_argument(
+            "--nlp-uses-meta", dest="nlp_uses_meta", action="store_true",
+            help=f"also add metaposts as inputs to NLP tasks?")
+        parser.add_argument(
+            "--nlp-uses-excerpt", dest="nlp_uses_excerpt", action="store_true",
+            help=f"metaposts only: use text from `excerpt` instead of `text` field?")
+        parser.add_argument(
+            "--meta-uses-nlp", dest="meta_uses_nlp", action="store_true",
+            help=f"metapost generation: use text from `caption` field instead of `title` field?; default is True")
+
         # TODO: add option parsing for `SIMILARITY_MAX_DOCS`
         #   cmd options override in `process_options`
 
     def process_options(self, args, opts):
 
+        mkfloat = lambda v: float(v) if v else None
+        mkint = lambda v: int(v) if v else None
+
         ScrapyCommand.process_options(self, args, opts)
         try:
             opts.days_range = arglist_to_dict(opts.days_range)
             opts.thresholds = arglist_to_dict(opts.thresholds)
+
         except ValueError as e:
             print(e)
             raise UsageError("Invalid -a value, use -a NAME=VALUE", print_help=False)
 
-        # override project settings
-        # iff supplied by cmdline
-        for k, v in dict(
-            SIMILARITY_SIBLINGS_THRESHOLD=opts.thresholds.get(self.siblings_field),
-            SIMILARITY_RELATED_THRESHOLD=opts.thresholds.get(self.related_field),
-        ).items():
-            if v:
-                self.settings.set(k, float(v), priority='cmdline')
+        # override project settings iff supplied by the cmdline
+        # careful not to overwrite working defaults with undefined values from the cmdline
+        params = dict(filter(lambda p: p[1], {
+            "similarity_siblings_threshold": mkfloat(opts.thresholds.get(self.siblings_field)),
+            "similarity_related_threshold": mkfloat(opts.thresholds.get(self.related_field)),
+            "summary_minimum_length": mkint(opts.thresholds.get('sumlen')),
+            "nlp_uses_meta": opts.nlp_uses_meta,
+            "nlp_uses_excerpt": opts.nlp_uses_excerpt,
+            "meta_uses_nlp": opts.meta_uses_nlp
+        }.items()))
+
+        self.set_post_settings(params)
 
     def run(self, args, opts):
 
@@ -157,7 +177,7 @@ class NlpCmd(DayCmd):
             # day_counts = self.save_day(day, verb)
             save_day = lambda cmd, *args, **kwargs: \
                 cmd.save_day(*args, **kwargs)
-            day_counts = log_running(f"nlp {verb or 'all'} {day}", msg)\
+            day_counts = log_running(f"nlp {verb or 'all'} {day}", msg) \
                 (save_day)(self, day, verb)
 
             for s in list(stats):
@@ -174,8 +194,3 @@ class NlpCmd(DayCmd):
 
         nlp = DayNlp(collection)
         return nlp.save_day(verb)
-
-
-
-
-

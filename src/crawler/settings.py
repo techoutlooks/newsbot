@@ -105,10 +105,11 @@ POSTS = {
 
     # NLP
     # ----------------------------------
-    "similarity_siblings_threshold": .1,
-    "similarity_related_threshold": .05,
+    "similarity_siblings_threshold": .21,
+    "similarity_related_threshold": .11,
     "similarity_max_docs": 5,
-    "metapost_baseurl": get_env("METAPOST_BASEURL", "/posts/", coerce=True)
+    "summary_minimum_length": 51,
+    "metapost_baseurl": get_env("METAPOST_BASEURL", "/post/", coerce=True)
 
 }
 

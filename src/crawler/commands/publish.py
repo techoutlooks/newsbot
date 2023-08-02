@@ -82,7 +82,7 @@ class PublishCmd(PublishConfigMixin, DayCmd):
         parser.add_argument(
             "-k", "--skip-task", dest="skip_tasks", action="append", default=[], metavar="DATE",
             help=f"skip selected subtasks eg. `-k publish -k pull_metrics`. "
-                 f"(default: -d {mk_date()})")
+                 f"(default: skip none, ie. run all tasks")
 
     def process_options(self, args, opts):
 

@@ -1,8 +1,9 @@
 import os
 import sys
 
+
 # IMPORTANT! first, call `configure()` to initialize the newsutils lib
-# this requires availing the path to the `crawler` module to `configure()`, ie. './src'
+# this requires availing the path to the `crawler` module, (eg. src/) to `configure()`
 from newsutils.conf import configure
 sys.path.append(os.getcwd())
 configure()

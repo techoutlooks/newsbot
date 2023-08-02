@@ -11,6 +11,7 @@
 
     ```shell
     cd ..
+    # docker build . -t $REGISTRY/newsbot:$TAG --no-cache --pull 
     docker build . -t $REGISTRY/newsbot:$TAG \
       && docker tag localhost:5001/newsbot:$TAG europe-west1-docker.pkg.dev/$PROJECT/$REPOSITORY/newsbot:$TAG \
       && docker push europe-west1-docker.pkg.dev/$PROJECT/$REPOSITORY/newsbot:1.0
@@ -24,17 +25,20 @@
    cat << EOF > ../.env
    CRAWL_DB_URI=mongodb://mongo:27017/scraped_news_db
    CRAWL_SCHEDULE=10
-   METAPOST_BASEURL=/posts
+   METAPOST_BASEURL=/post
    EOF
    ```
 
    * Run the Docker container locally
    
    ```shell
+   export TAG=1.0 REGISTRY=localhost:5001
+
    docker run -d --rm \
       --name newsbot --network bridge --env-file='../.env' \
       -v newsbot-data:/newsbot/data \
-   "$REGISTRY/newsbot:$TAG"
+   "$REGISTRY/newsbot:$TAG" \
+   && docker logs -f  newsbot
    ```
    
    * Cleanup

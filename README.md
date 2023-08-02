@@ -34,11 +34,25 @@ Cf. README.md file from package `newsutils` for a ride on features.
 ### Setup
 
 1. Setup virtualenv  
-    ```shell
-    cd newsbot/src/
-    source venv/bin/activate
-    pip install -U pip-tools
-    ```
+
+* conda
+
+```shell
+
+# iff new env (create)
+conda env create -f environment.yml
+
+# iff existing env (update)
+conda activate newsbot
+conda env update --file environment.yml --prune
+```
+
+* venv
+  ```shell
+  cd newsbot/src/
+  source venv/bin/activate
+  pip install -U pip-tools
+  ```
 
 2. (Re-)create dev requirements files (optional)
 **Important!**: Re-run required before (re-)building Docker the image
@@ -61,7 +75,7 @@ Cf. README.md file from package `newsutils` for a ride on features.
     
     # newsboard frontend url=http://localhost:3100
     export \
-      METAPOST_BASEURL='/posts' \
+      METAPOST_BASEURL='/post' \
       SCRAPY_SETTINGS_MODULE=crawler.settings
     ```
 
@@ -210,7 +224,7 @@ Build Docker image locally.
 
 ```shell
 export TAG=1.0 REGISTRY=localhost:5001
-docker build . -t $REGISTRY/newsbot:$TAG
+docker build . -t $REGISTRY/newsbot:$TAG # --no-cache --pull
 ```
 
 Notes: 

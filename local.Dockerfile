@@ -2,7 +2,7 @@
 # ------------------------
 #   export TAG=1.0 REGISTRY=localhost:5001
 #   docker build . -f local.Dockerfile --ssh default -t $REGISTRY/newsbot:$TAG
-#   docker push $REGISTRY/newsapi:$TAG
+#   docker push $REGISTRY/newsbot:$TAG
 #   docker run -v newsbot-data:/newsbot --network host --name newsbot $REGISTRY/newsbot:$TAG
 #
 # GKE Cluster (Prod)
