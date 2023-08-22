@@ -12,18 +12,28 @@
     ```shell
     cd ..
     # docker build . -t $REGISTRY/newsbot:$TAG --no-cache --pull 
-    docker build . -t $REGISTRY/newsbot:$TAG \
+    docker build . -t $REGISTRY/newsbot:$TAG --no-cache \
       && docker tag localhost:5001/newsbot:$TAG europe-west1-docker.pkg.dev/$PROJECT/$REPOSITORY/newsbot:$TAG \
       && docker push europe-west1-docker.pkg.dev/$PROJECT/$REPOSITORY/newsbot:1.0
     ```
+   
+3. Cleanup
+   
+   ```shell
+   
+   # remove all static assets without deleting the bucket
+   # all objects and their versions from bucket, use the ``-a`` option
+   # large number of objects to remove, use the ``gsutil -m`` option (multi-threading/multi-processing)
+   gsutil -m rm gs://leeram-news/**
+   ```
 
-3. Dry-running the project on local Docker engine.
+## Dry-running the project on local Docker engine.
 
    * Setup project envs
    
    ```shell
    cat << EOF > ../.env
-   CRAWL_DB_URI=mongodb://mongo:27017/scraped_news_db
+   DB_URI=mongodb://mongo:27017/scraped_news_db
    CRAWL_SCHEDULE=10
    METAPOST_BASEURL=/post
    EOF

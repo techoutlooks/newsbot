@@ -14,6 +14,7 @@ Cf. README.md file from package `newsutils` for a ride on features.
 - Compute posts similarity across posts by all crawled sites (published on same date). 
   `nlp` command.
 
+
 ## TODO
 
 - publishing stats (`crawler.publish.stats`)
@@ -203,7 +204,7 @@ scrapy nlp -t siblings=0.35 -t related=0.15 -D from=2022-03-19 -d 2022-03-02
 Following env vars with respective defaults supported by the project: 
 
 * `newsbot.crawler`
-  - CRAWL_DB_URI=mongodb://db:27017/scraped_news_db
+  - DB_URI=mongodb://db:27017/scraped_news_db
   - SIMILARITY_SIBLINGS_THRESHOLD=0.4
   - SIMILARITY_RELATED_THRESHOLD=0.2
 

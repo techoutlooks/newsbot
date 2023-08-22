@@ -201,7 +201,7 @@ class SaveMetricsMixin:
     def collection(self):
         name = get_setting("PUBLISH.collection")
         return self._collection or \
-            Collection(collection=name, db_or_uri=get_setting("CRAWL_DB_URI"))
+            Collection(collection=name, db_or_uri=get_setting("DB_URI"))
 
     def save(self, overwrite=True):
         """

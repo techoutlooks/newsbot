@@ -15,7 +15,7 @@
 #   gcloud builds submit --tag gcr.io/$PROJECT_ID/newsbot:$TAG .
 #   gcloud run deploy newsbot --image gcr.io/$PROJECT_ID/newsbot:$TAG \
 #       --region us-central1 --platform managed --allow-unauthenticated \
-#       --update-env-vars CRAWL_DB_URI=$CRAWL_DB_URI --quiet
+#       --update-env-vars DB_URI=$DB_URI --quiet
 #
 
 FROM python:3.9 as deps

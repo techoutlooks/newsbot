@@ -7,6 +7,7 @@ import urllib
 
 import aenum
 import requests
+from urllib3.exceptions import MaxRetryError
 
 from newsutils.conf import get_setting
 from newsutils.conf.mixins import PostStrategyMixin
@@ -19,9 +20,6 @@ __all__ = (
     "DayPublish", "PublishPost", "PublishConfigMixin"
 )
 
-from urllib3.exceptions import MaxRetryError
-
-from crawler import settings
 
 # Scrapy command. Enriches `newsutils.TaskTypes` with the publishing task type
 # Requires this module being imported first.

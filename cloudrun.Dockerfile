@@ -1,13 +1,13 @@
 # Local:
 #   DOCKER_IMAGE=newsbot:v1
-#   CRAWL_DB_URI=mongodb+srv://techu:<password>@cluster0.6we1byk.mongodb.net/scraped_news_db/?retryWrites=true&w=majority
+#   DB_URI=mongodb+srv://techu:<password>@cluster0.6we1byk.mongodb.net/scraped_news_db/?retryWrites=true&w=majority
 #   docker build --ssh default -t $DOCKER_IMAGE -f cloudrun.Dockerfile .
 #   docker run -v newsbot-data:/newsbot --network host --name newsbot $DOCKER_IMAGE
 # GCP
 #   gcloud builds submit --tag gcr.io/$PROJECT_ID/$DOCKER_IMAGE .
 #   gcloud run deploy newsbot --image gcr.io/$PROJECT_ID/$DOCKER_IMAGE \
 #       --region us-central1 --platform managed --allow-unauthenticated \
-#       --update-env-vars CRAWL_DB_URI=$CRAWL_DB_URI --quiet
+#       --update-env-vars DB_URI=$DB_URI --quiet
 #
 FROM python:3.9
 

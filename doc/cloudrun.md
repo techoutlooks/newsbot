@@ -16,7 +16,7 @@ gcloud config set project $PROJECT_ID
   Note: `gcloud projects list` to see all projects.
     ```shell
     # newsbot 
-    CRAWL_DB_URI='mongodb+srv://techu:techu0910!@cluster0.6we1byk.mongodb.net/scraped_news_db?retryWrites=true&w=majority'
+    DB_URI='mongodb+srv://techu:techu0910!@cluster0.6we1byk.mongodb.net/scraped_news_db?retryWrites=true&w=majority'
     
     # gcloud
     REGION=europe-west1
@@ -70,7 +70,7 @@ Following commands run for the `src` directory.
     gcloud beta run jobs create newsbot \
       --region $REGION \
       --image gcr.io/$PROJECT_ID/$IMAGE_NAME \
-      --set-env-vars CRAWL_DB_URI=$CRAWL_DB_URI \
+      --set-env-vars DB_URI=$DB_URI \
       --set-env-vars BUCKET=$BUCKET_NAME \
       --service-account $SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com \
       --memory 4Gi \
@@ -102,7 +102,7 @@ gcloud beta run jobs update newsbot --memory 4Gi
 * Update env vars
 ```shell
 gcloud beta run jobs update newsbot \
-  --set-env-vars CRAWL_DB_URI=$CRAWL_DB_URI
+  --set-env-vars DB_URI=$DB_URI
 
 ```
 
