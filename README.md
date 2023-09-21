@@ -1,10 +1,15 @@
-
-
-# arise-newsbot
+# newsbot
 
 News crawling and semantic analysis using NLP.
+Companion code for [scrapy-newsutils](https://github.com/techoutlooks/scrapy-newsutils/).
+that demonstrate how to scrape hundreds of websites to a MongoDB collection, filter out ads duplicate and undesirable content, 
+run NLP pipelines to gather posts by content affinity, generate titles and summaries, etc.
 
-## Features (check the demo )
+An improved version is used to scrape news at [Leeram News](https://leeram.today/).
+Use the [newspi](https://github.com/techoutlooks/newsapi/) GraphQL server to serve news downloaded by `newsbot`.
+
+
+## Features 
 - Create a spider with few lines of code
 - Multiple crawling rules per site, mapping to different post categories.
   Cf. `post_categories_xpaths`
@@ -13,44 +18,13 @@ News crawling and semantic analysis using NLP.
 - Compute posts similarity across posts by all crawled sites (published on same date). 
   `nlp` command.
 
-## TODO
-- similarity across docs belonging to several days 
 
+## Command line usage
 
-## Dev
-
-### Setup
-
-(Re-)create dev requirements files.
-Required before (re-)building Docker the image
-```shell
-pip-compile requirements/in/prod.txt --output-file requirements/prod.txt 
-pip-compile requirements/in/dev.txt  --output-file requirements/dev.txt 
-
-
-```
-Sync dev requirements to venv
-```shell
-# pip-sync requirements/prod.txt requirements/dev.txt
-pip-sync requirements/dev.txt 
-
-```
-
-* Run Scrapy commands individually, eg.:
-    ```shell
-    cd crawler && python scrapy crawlall && scrapy nlp
-    ```
-
-* Or run scheduler script periodically:
-    ```shell
-    
-    python run.py
-    ```
-
-### Syntax
-
+The codebase provide examples for creating commands to run customizable crawl jobs and NLP tasks.
 Note: -D: for date ranges, -d: for single dates
 
+### Syntax
 
 1. run all spiders
     ```  
@@ -134,6 +108,36 @@ scrapy nlp -t siblings=0.35 -t related=0.15 -D from=2022-03-19 -d 2022-03-02
 
 ```
 
+## Dev
+
+### Setup
+
+(Re-)create dev requirements files.
+Required before (re-)building Docker the image
+```shell
+pip-compile requirements/in/prod.txt --output-file requirements/prod.txt 
+pip-compile requirements/in/dev.txt  --output-file requirements/dev.txt 
+
+
+```
+Sync dev requirements to venv
+```shell
+# pip-sync requirements/prod.txt requirements/dev.txt
+pip-sync requirements/dev.txt 
+
+```
+
+* Run Scrapy commands individually, eg.:
+    ```shell
+    cd crawler && python scrapy crawlall && scrapy nlp
+    ```
+
+* Or run scheduler script periodically:
+    ```shell
+    
+    python run.py
+    ```
+
 ### Docker
 
 Below still to check
@@ -141,7 +145,6 @@ Below still to check
 docker-compose run --service-ports newsbot \
   "cd crawler/ && scrapy crawlall && scrapy nlpsimilarity -t siblings=0.4 -t related=0.2 -d 2021-10-22 -d 2021-10-23"
 ```
-
 
 ### Debugging
 
