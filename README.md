@@ -1,9 +1,14 @@
-# leeram-news/newsbot
+# newsbot
 
-News crawling and semantic analysis using NLP. 
-Generate original caption/summary/category from scraped post using NLP techniques.
-Cf. README.md file from package `newsutils` for a ride on features.
+News crawling and semantic analysis using NLP.
+Companion code for [scrapy-newsutils](https://github.com/techoutlooks/scrapy-newsutils/).
+that demonstrate how to scrape hundreds of websites to a MongoDB collection, filter out ads duplicate and undesirable content, 
+run NLP pipelines to gather posts by content affinity, generate titles and summaries, etc.
 
+An improved version is used to scrape news at [Leeram News](https://leeram.today/).
+Use the [newspi](https://github.com/techoutlooks/newsapi/) GraphQL server to serve news downloaded by `newsbot`.
+
+Cf. README.md file from package `scapy-newsutils` for a ride on features.
 
 ## Features (check the demo )
 - Create a spider with few lines of code
@@ -15,78 +20,9 @@ Cf. README.md file from package `newsutils` for a ride on features.
   `nlp` command.
 
 
-## TODO
-
-- publishing stats (`crawler.publish.stats`)
-- similarity across docs belonging to several days 
-
-
-## Dev
-
-
-### Requirements
-
-* deps: `newsutils`, `conda`, `MongoDb`
-* started MongoDB instance
-    ```shell
-    docker run --name mongo --restart=unless-stopped -d -p 27017:27017  -v mongodata:/data mongo 
-    ```
-
-### Setup
-
-1. Setup virtualenv  
-
-* conda
-
-```shell
-
-# iff new env (create)
-conda env create -f environment.yml
-
-# iff existing env (update)
-conda activate newsbot
-conda env update --file environment.yml --prune
-```
-
-* venv
-  ```shell
-  cd newsbot/src/
-  source venv/bin/activate
-  pip install -U pip-tools
-  ```
-
-2. (Re-)create dev requirements files (optional)
-**Important!**: Re-run required before (re-)building Docker the image
-    ```shell
-    # run from the `src` folder.
-    pip-compile --resolver=backtracking requirements/in/prod.txt --output-file requirements/prod.txt 
-    pip-compile --resolver=backtracking requirements/in/dev.txt  --output-file requirements/dev.txt 
-    ```
-
-3. Sync dev requirements to venv
-    ```shell
-    # run from `src` folder.
-    pip-sync src/requirements/dev.txt 
-    # pip-sync requirements/prod.txt requirements/dev.txt
-    ```
-   
-* Envvars setup
-
-    ```shell
-    
-    # newsboard frontend url=http://localhost:3100
-    export \
-      METAPOST_BASEURL='/post' \
-      SCRAPY_SETTINGS_MODULE=crawler.settings
-    ```
-
-
-### Define scrapers
-
-Cf. `newsutils/README.md`
-
-  
-### Commands & syntax
+## Command line usage
+ 
+### Syntax
 
 Notes: 
 * `-D`: for date ranges, `-d`: for single dates 
@@ -112,7 +48,7 @@ caption, summary and category for any given scraped post.
       [-t siblings=<%f>] [-t related=<%f>]
     ```
 
-### Quick start
+### Examples
   
 * Following required chdir to Scrapy project dir
     ```shell
@@ -199,7 +135,7 @@ scrapy nlp -t siblings=0.40 -t related=0.2 -D from=2022-03-19
 scrapy nlp -t siblings=0.35 -t related=0.15 -D from=2022-03-19 -d 2022-03-02
 ```
 
-### Env vars
+## Env vars
 
 Following env vars with respective defaults supported by the project: 
 
@@ -219,6 +155,74 @@ Following env vars with respective defaults supported by the project:
   - CRAWL_DAYS - same as `crawlall -d <date>`
   - CRAWL_SCHEDULE=20 - interval (minutes) between crawl+nlp jobs
 
+
+## Setup
+
+### Requisites
+
+* deps: `newsutils`, `conda`, `MongoDb`
+* started MongoDB instance
+    ```shell
+    docker run --name mongo --restart=unless-stopped -d -p 27017:27017  -v mongodata:/data mongo 
+    ```
+
+### Env
+
+1. Setup virtualenv  
+
+* conda
+
+```shell
+
+# iff new env (create)
+conda env create -f environment.yml
+
+# iff existing env (update)
+conda activate newsbot
+conda env update --file environment.yml --prune
+```
+
+* venv
+  ```shell
+  cd newsbot/src/
+  source venv/bin/activate
+  pip install -U pip-tools
+  ```
+
+2. (Re-)create dev requirements files (optional, dev only)
+**Important!**: Re-run required before (re-)building Docker the image
+    ```shell
+    # run from the `src` folder.
+    pip-compile --resolver=backtracking requirements/in/prod.txt --output-file requirements/prod.txt 
+    pip-compile --resolver=backtracking requirements/in/dev.txt  --output-file requirements/dev.txt 
+    ```
+
+3. Sync dev requirements to venv
+    ```shell
+    # run from `src` folder.
+    pip-sync src/requirements/dev.txt 
+    # pip-sync requirements/prod.txt requirements/dev.txt
+    ```
+   
+4. Envvars setup
+
+    ```shell
+    
+    # newsboard frontend url=http://localhost:3100
+    export \
+      METAPOST_BASEURL='/post' \
+      SCRAPY_SETTINGS_MODULE=crawler.settings
+    ```
+
+
+5. Define your scrapers
+
+Define rules for your scrapers through the database or static classes.
+Find help [here](https://github.com/techoutlooks/scrapy-newsutils#usage).
+
+
+## Deploy
+
 ### Docker
 
 Build Docker image locally. 
@@ -233,16 +237,16 @@ Notes:
 * Add `--no-cache --pull` to ignore cached and pulled layers.
 
 
-## Debugging
-
-* [debugging hints](./doc/debug.md).
-
-
-## Prod
+### Prod
 
 * Getting [ready for GCP](./doc/gcloud-init.md). Optional, do once per project) 
 * Deploy to Kubernetes cluster in [GKE](./doc/gke.md)
 * Deploy as a [gcloud run job](./doc/cloudrun.md).
+
+
+## Debugging
+
+* [debugging hints](./doc/debug.md).
 
 
 ## TODO
