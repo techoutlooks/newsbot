@@ -8,8 +8,9 @@ run NLP pipelines to gather posts by content affinity, generate titles and summa
 An improved version is used to scrape news at [Leeram News](https://leeram.today/).
 Use the [newspi](https://github.com/techoutlooks/newsapi/) GraphQL server to serve news downloaded by `newsbot`.
 
+Cf. README.md file from package `scapy-newsutils` for a ride on features.
 
-## Features 
+## Features (check the demo )
 - Create a spider with few lines of code
 - Multiple crawling rules per site, mapping to different post categories.
   Cf. `post_categories_xpaths`
@@ -20,11 +21,13 @@ Use the [newspi](https://github.com/techoutlooks/newsapi/) GraphQL server to ser
 
 
 ## Command line usage
-
-The codebase provide examples for creating commands to run customizable crawl jobs and NLP tasks.
-Note: -D: for date ranges, -d: for single dates
-
+ 
 ### Syntax
+
+Notes: 
+* `-D`: for date ranges, `-d`: for single dates 
+* Commands may also be invoked directly eg.,\
+`python crawler/commands/nlp.py -t siblings=0.40 -t related=0.2 -d 2022-03-2`
 
 1. run all spiders
     ```  
@@ -33,7 +36,11 @@ Note: -D: for date ranges, -d: for single dates
       [-d <%Y-%m-%d>] \
     ```
 
-2. update similarity based on thresholds (-t option)
+2. Run all NLP tasks:
+- update similarity based on thresholds (-t option)
+- generate metapost from similar (sibling) posts. 
+This involves performing model inference to generate original:
+caption, summary and category for any given scraped post.
     ```  
      scrapy nlp \
       [-D from=<%Y-%m-%d> -D to=<%Y-%m-%d>] \ 
@@ -42,15 +49,37 @@ Note: -D: for date ranges, -d: for single dates
     ```
 
 ### Examples
-
-1. set env and cwd properly
+  
+* Following required chdir to Scrapy project dir
     ```shell
-    source venv/bin/activate
-    python crawler/commands/nlp.py -t siblings=0.40 -t related=0.2 -d 2022-03-20
-    cd backend/newsbot/crawler/
+    cd src/crawler
     ```
 
-2. crawl all spiders in the `crawler/spiders` folder
+* Run all spiders, scrape today's posts only.
+    ```shell 
+    python scrapy crawlall 
+    ```
+
+* Perform NLP task on today's posts.
+    ```shell
+    scrapy nlp
+    ```
+
+* Publish given day's posts to all channels 
+    ```shell
+    scrapy publish facebook,twitter -p -D from=2023-03-21 -M metrics=follows,likes,visits -M dimensions=status,feeds -k publish
+    
+    ```
+
+* Run all above tasks at once, periodically with 10 minutes interval. \
+This runs all spiders, fetches sport news, and run NLP tasks.
+    ```shell
+    CRAWL_SCHEDULE=10  src/run.py
+    ```
+
+### Advanced usage
+
+* Crawl all spiders
     ```shell
     
     # crawl all posts with regardless their publish time  
@@ -69,7 +98,7 @@ Note: -D: for date ranges, -d: for single dates
     scrapy crawlall -d 2022-04-09 -d 2022-04-10 -d 2022-04-24 -D from=2022-04-19 -D to=2022-04-21          
     ```
 
-3. run NLP tasks
+* Run NLP tasks
 
 Cf. `TextSummarizer`, `TitleSummarizer`, `Categorizer` models from our
 [newsnlp](https://github.com/techoutlooks/newsnlp.git) package (dependency).
@@ -93,8 +122,7 @@ scrapy nlp summary -t siblings=0.10 -t related=0.05 -d 2022-05-16
 scrapy nlp metapost -t siblings=0.10 -t related=0.05 -d 2022-05-16
 ```
 
-
-Playing around with dates
+* Playing around with dates
 
 ```shell
 # single dates
@@ -105,210 +133,124 @@ scrapy nlp -t siblings=0.40 -t related=0.2 -D from=2022-03-19
 
 # mixed date range and days
 scrapy nlp -t siblings=0.35 -t related=0.15 -D from=2022-03-19 -d 2022-03-02
-
 ```
 
-## Dev
+## Env vars
 
-### Setup
+Following env vars with respective defaults supported by the project: 
 
-(Re-)create dev requirements files.
-Required before (re-)building Docker the image
-```shell
-pip-compile requirements/in/prod.txt --output-file requirements/prod.txt 
-pip-compile requirements/in/dev.txt  --output-file requirements/dev.txt 
+* `newsbot.crawler`
+  - DB_URI=mongodb://db:27017/scraped_news_db
+  - SIMILARITY_SIBLINGS_THRESHOLD=0.4
+  - SIMILARITY_RELATED_THRESHOLD=0.2
 
 
-```
-Sync dev requirements to venv
-```shell
-# pip-sync requirements/prod.txt requirements/dev.txt
-pip-sync requirements/dev.txt 
+* `newsbot.ezines` 
+  - TIMEOUT=1 - api requests timeout (seconds)
 
-```
 
-* Run Scrapy commands individually, eg.:
+* `src/run.py` script
+  - CRAWL_DAYS_FROM - same as `crawlall -D from=<from-date>`
+  - CRAWL_DAYS_TO - same as `crawlall -D to=<to-date>`
+  - CRAWL_DAYS - same as `crawlall -d <date>`
+  - CRAWL_SCHEDULE=20 - interval (minutes) between crawl+nlp jobs
+
+
+## Setup
+
+### Requisites
+
+* deps: `newsutils`, `conda`, `MongoDb`
+* started MongoDB instance
     ```shell
-    cd crawler && python scrapy crawlall && scrapy nlp
+    docker run --name mongo --restart=unless-stopped -d -p 27017:27017  -v mongodata:/data mongo 
     ```
 
-* Or run scheduler script periodically:
+### Env
+
+1. Setup virtualenv  
+
+* conda
+
+```shell
+
+# iff new env (create)
+conda env create -f environment.yml
+
+# iff existing env (update)
+conda activate newsbot
+conda env update --file environment.yml --prune
+```
+
+* venv
+  ```shell
+  cd newsbot/src/
+  source venv/bin/activate
+  pip install -U pip-tools
+  ```
+
+2. (Re-)create dev requirements files (optional, dev only)
+**Important!**: Re-run required before (re-)building Docker the image
+    ```shell
+    # run from the `src` folder.
+    pip-compile --resolver=backtracking requirements/in/prod.txt --output-file requirements/prod.txt 
+    pip-compile --resolver=backtracking requirements/in/dev.txt  --output-file requirements/dev.txt 
+    ```
+
+3. Sync dev requirements to venv
+    ```shell
+    # run from `src` folder.
+    pip-sync src/requirements/dev.txt 
+    # pip-sync requirements/prod.txt requirements/dev.txt
+    ```
+   
+4. Envvars setup
+
     ```shell
     
-    python run.py
+    # newsboard frontend url=http://localhost:3100
+    export \
+      METAPOST_BASEURL='/post' \
+      SCRAPY_SETTINGS_MODULE=crawler.settings
     ```
+
+
+5. Define your scrapers
+
+Define rules for your scrapers through the database or static classes.
+Find help [here](https://github.com/techoutlooks/scrapy-newsutils#usage).
+
+
+## Deploy
 
 ### Docker
 
-Below still to check
+Build Docker image locally. 
+
 ```shell
-docker-compose run --service-ports newsbot \
-  "cd crawler/ && scrapy crawlall && scrapy nlpsimilarity -t siblings=0.4 -t related=0.2 -d 2021-10-22 -d 2021-10-23"
+export TAG=1.0 REGISTRY=localhost:5001
+docker build . -t $REGISTRY/newsbot:$TAG # --no-cache --pull
 ```
 
-### Debugging
-
-#### Strings to look for in logs
-
-
-2022-03-07 21:15:25 [crawlallcommand] INFO: crawlallcommand >> STARTED crawling news (2021-03-07 to 2021-03-08)
-2022-03-07 21:17:46 [crawlallcommand] INFO: crawlallcommand >> DONE crawling news (2021-03-07 to 2021-03-08)
+Notes: 
+* `localhost:5001` is local Docker registry (needed for testing in local KinD Kubernetes cluster)
+* Add `--no-cache --pull` to ignore cached and pulled layers.
 
 
-INFO: Dumping Scrapy stats
- 'item_scraped_count': 5,
+### Prod
+
+* Getting [ready for GCP](./doc/gcloud-init.md). Optional, do once per project) 
+* Deploy to Kubernetes cluster in [GKE](./doc/gke.md)
+* Deploy as a [gcloud run job](./doc/cloudrun.md).
 
 
+## Debugging
 
-## Prod (GCR, ie. Google Cloud Run)
-
-- Docs:
-    [1](https://cloud.google.com/run/docs/execute/jobs)
-
-- Install and authenticate `gcloud` CLI locally
-    ```shell
-    curl https://sdk.cloud.google.com | bash
-    gcloud init
-    ```
-
-- Set few useful env vars before proceeding. \
-  Note: Get valid project id from: `gcloud config list`
-    ```shell
-    
-    # newsbot 
-    CRAWL_DB_URI='mongodb+srv://techu:techu0910!@cluster0.6we1byk.mongodb.net/scraped_news_db?retryWrites=true&w=majority'
-    
-    # gcloud
-    REGION=europe-west1
-    PROJECT_ID=leeram
-    BOT_IMAGE_NAME=newsbot:v1
-    SERVICE_ACCOUNT=local-docker-service
-    GCP_KEY_PATH=~/Devl/Projects/ARISE/key.json
-    ```
-
-- Set global env vars
-    ```shell
-    gcloud config set core/project $PROJECT_ID
-    gcloud config set run/region $REGION
-    ```
-
-
-### Getting ready for GCR
-
-* Create service Account (required to make requests to Google APIs)
-* Push the app's docker image to their container registry
-
-
-2. Create new service account with appropriate permissions,
-   associate it with the project.
-   Could have also used a single `--role roles/owner` \
-   Refs: [1](https://cloud.google.com/sdk/gcloud/reference/projects/add-iam-policy-binding)
-
-    ```shell
-    gcloud iam service-accounts create local-docker-service 
-    PROJECT_ID=leeram 
-    gcloud projects add-iam-policy-binding $PROJECT_ID \
-        --member "serviceAccount:${SERVICE_ACCOUNT}@$PROJECT_ID.iam.gserviceaccount.com" \
-        --role "roles/storage.admin" \
-        --role "roles/run.admin"
-    ```
-
-4. Create and download service account key.json from CGP's IAM service.
-   (preferably outside git repo), and export it locally.
-    ```shell
-    gcloud iam service-accounts keys create ${GCP_KEY_PATH} \
-        --iam-account ${SERVICE_ACCOUNT}@${PROJECT_ID}.iam.gserviceaccount.com
-   
-    export GOOGLE_APPLICATION_CREDENTIALS=${GCP_KEY_PATH}
-    ```
-
-5. Authenticate Docker with the Container Registry service on GCR. \
-   Refs: [1](https://cloud.google.com/container-registry/docs/advanced-authentication)
-    ```shell
-    cat ${GCP_KEY_PATH} | docker login -u _json_key --password-stdin https://grc.io
-    ```
-   
-### Run job
-
-1. Enable cloud APIs: 
-    ```shell
-    gcloud services enable \
-        artifactregistry.googleapis.com \
-        cloudbuild.googleapis.com \
-        run.googleapis.com
-    ```
-   
-2. Build image, eg. `gcr.io/leeram/newsbot:v1`
-    ```shell
-    gcloud builds submit --tag gcr.io/$PROJECT_ID/$BOT_IMAGE_NAME .
-    ```
-
-3. Create the Cloud Run job `newsbot`
-    ```shell
-    gcloud beta run jobs create newsbot \
-      --image gcr.io/$PROJECT_ID/$BOT_IMAGE_NAME \
-      --set-env-vars CRAWL_DB_URI=$CRAWL_DB_URI \
-      --service-account $SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com \
-      --memory 1Gi
-    ```
-
-4. Run the job
-    ```shell
-    gcloud beta run jobs execute newsbot
-    ```
-
-### Misc
-
-* Check image
-```shell
-gcloud container images list-tags gcr.io/$PROJECT_ID/newsbot
-```
-
-* Describe the execution
-```shell
-gcloud beta run executions describe <EXECUTION_NAME>
-```
-
-* Update memory
-```shell
-gcloud beta run jobs update newsbot --memory 1Gi
-```
-
-* Update env vars
-```shell
-gcloud beta run jobs update newsbot  --set-env-vars CRAWL_DB_URI=$CRAWL_DB_URI
-
-```
-
-* Delete job
-```shell
-gcloud beta run jobs delete newsbot
-```
-
-
-
-## FIXME
-
-* Move code for fetching post's `.images`, `.top_image` to Pipeline/Middleware
-    https://github.com/scrapy/scrapy/issues/2436
-    https://doc.scrapy.org/en/latest/topics/spider-middleware.html#scrapy.spidermiddlewares.SpiderMiddleware.process_spider_output
-* 
-* 
+* [debugging hints](./doc/debug.md).
 
 
 ## TODO
 
-#### Anti scraper blocking: 
-Refs: [1](https://scrapfly.io/blog/web-scraping-with-scrapy/)
-
-
-- various plugins for proxy management, eg.:
-  - (scrapy-rotating-proxies)[https://github.com/TeamHG-Memex/scrapy-rotating-proxies],
-  - (scrapy-fake-useragent)[https://github.com/alecxe/scrapy-fake-useragent], for randomizing user agent headers. 
-
-- Browser emulation:
-  - like scrapy-playwright 
-  - scrapy-selenium (+GCP): 
-    [1](https://youtu.be/2LwrUu9yTAo),
-    [2](https://www.roelpeters.be/how-to-deploy-a-scraping-script-and-selenium-in-google-cloud-run/)
-- JS support via (Splash)[https://splash.readthedocs.io/en/stable/faq.html]
+* [Fixes](./doc/todo.md#fixme).
+* [Future](./doc/todo.md#todo).
+* Run dev and Docker image in conda rather than venv. cf `newsnlp` dep

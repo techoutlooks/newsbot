@@ -1,7 +1,14 @@
 .idea/
 venv/
+data/
 src/.pytest_cache/
+.newspaper_scraper/
+.coverage
 *.py[cod]
+*.egg-info/
+*.egg
 __pycache__/*
 .DS_Store
-.coverage
+Dockerfile
+key.json
+.python-version

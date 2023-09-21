@@ -1,0 +1,17 @@
+# Issue with pip deps overriding conda deps:
+# https://github.com/conda/conda/issues/6805#issuecomment-515680253
+
+
+name: newsbot
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - libsvm-python   # required by image-quality
+  - wheel
+  - pip
+  - pip:
+    - -r src/requirements/in/dev.txt
+
+
+
